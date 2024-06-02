@@ -1,0 +1,96 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+import seaborn as sns
+import matplotlib.pyplot as plt
+df =pd.read_csv('C:/Users/nkova/Lab5/heart_disease_uci.csv')
+df.head()
+
+df.hist(figsize=(16, 16))
+
+print("Size of dataset:", df.shape)
+duplicate_rows = df.duplicated().sum()
+print("\nIs Null")
+missing_data = df.isna().sum()
+print(missing_data, "\n")
+
+print("\nIs 0")
+zero_data = (df == 0).sum()
+print(zero_data)
+
+df_cleaned = df.copy()
+
+# Замінити 0 на Null у вказаних колонках
+columns_to_replace_zero = ['trestbps', 'chol', 'restecg', 'thalch', 'oldpeak']
+for col in columns_to_replace_zero:
+    df_cleaned.loc[df_cleaned[col] == 0, col] = pd.NA
+
+# Замінити всі негативні значення на Null в колонці oldpeak
+df_cleaned.loc[df_cleaned['oldpeak'] < 0, 'oldpeak'] = pd.NA
+def detect_outliers(data, col, threshold=3):
+    mean = data[col].mean()
+    std = data[col].std()
+    upper_bound = mean + threshold * std
+    lower_bound = mean - threshold * std
+    
+    anomalies = (data[col] > upper_bound) | (data[col] < lower_bound)
+    return anomalies, upper_bound, lower_bound
+
+
+outlier_results = {}
+
+numeric_columns = df.select_dtypes(include=['number'])
+
+for col in numeric_columns.columns:
+    anomalies, upper_bound, lower_bound = detect_outliers(df, col)
+    outlier_results[col] = {
+        "anomalies": anomalies,
+        "upper_bound": upper_bound,
+        "lower_bound": lower_bound
+    }
+    
+    
+    print(f"Column: {col}")
+    print(f"Anomalies: {anomalies.sum()}") 
+    print(f"Indices of anomalies: {anomalies[anomalies].index.tolist()}") 
+    print()  
+
+def replace_anomalies(data, col, threshold=3):
+    anomalies, _, _ = detect_outliers(data, col, threshold)
+    data.loc[anomalies, col] = pd.NA
+    return data
+
+for col in numeric_columns.columns:
+    df_cleaned = replace_anomalies(df_cleaned, col)
+numerical_data = df.select_dtypes(include=['number'])
+
+
+correlation_matrix = numerical_data.corr()
+
+
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.show()
+
+imputer = SimpleImputer(strategy='mean')  
+filled_data = imputer.fit_transform(numerical_data)
+
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(filled_data)
+
+pca = PCA(n_components=2)
+
+pca_result = pca.fit_transform(scaled_data)
+
+pca_df = pd.DataFrame(data=pca_result, columns=['PC1', 'PC2'])
+
+sns.scatterplot(x='PC1', y='PC2', data=pca_df)
+
+plt.title('PCA Results')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.show()
