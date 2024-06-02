@@ -1,0 +1,45 @@
+Завдання №1 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("hello world")
+
+random_array = np.random.rand(100)
+print(random_array)  
+
+plt.plot(random_array)
+plt.title('Графік випадкових чисел')
+plt.xlabel('Індекс числа')
+plt.ylabel('Число')
+plt.show()
+
+Завдання №2 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+column_names = ["Number of times pregnant", "Plasma glucose concentration", "Diastolic blood pressure (mm Hg)", "Triceps skin fold thickness (mm)", "2-Hour serum insulin (mu U/ml)", "Body mass index", "Diabetes pedigree function", "Age (years)", "Class variable (0 or 1)"]
+df = pd.read_csv('https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv', names=column_names)
+df.head()
+
+shape = df.shape
+print("Розмір датасету:", shape)
+
+columns = df.columns
+print("Колонки датасету: \n", columns)
+
+gaps=df.isnull().sum()
+print("Пропущені дані у даному датасеті: \n", gaps)
+
+means = df.mean()
+print("Середнє арифметичне: \n", means)
+
+variances = df.var()
+print("Дисперсія: \n", variances)
+
+std_devs = df.std()
+print("Середнє квадратичне відхилення: \n",std_devs)
+
+df.hist(figsize=(10, 10))
+plt.show()
