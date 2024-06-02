@@ -1,0 +1,150 @@
+Завдання №1 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LogisticRegression
+url = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"
+dataset = pd.read_csv(url)
+# Розділимо ознаки та цільову змінну
+X = dataset.iloc[:, :-1]
+y = dataset.iloc[:, -1]
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
+scaler = MinMaxScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+model = LogisticRegression()
+model.fit(X_train_scaled, y_train)
+y_pred = model.predict(X_val_scaled)
+accuracy = accuracy_score(y_val, y_pred)
+print("Точність логістичної регресії:", accuracy)
+
+# Встановлення підписів для індексів та стовпців
+feature_names = [
+    "Number of times pregnant",
+    "Plasma glucose concentration a 2 hours in an oral glucose tolerance test",
+    "Diastolic blood pressure (mm Hg)",
+    "Triceps skin fold thickness (mm)",
+    "2-Hour serum insulin (mu U/ml)",
+    "Body mass index (weight in kg/(height in m)^2)",
+    "Diabetes pedigree function",
+    "Age (years)"
+]
+
+# Building the correlation matrix
+correlation_matrix = X_train.corr()
+
+# Displaying the correlation matrix
+print("Correlation matrix:")
+print(correlation_matrix)
+
+# Selected features for model training
+selected_features = [4, 5, 6, 7]
+X_train_selected = X_train.iloc[:, selected_features]
+X_val_selected = X_val.iloc[:, selected_features]
+
+# Normalizing the selected features
+X_train_selected_scaled = scaler.fit_transform(X_train_selected)
+X_val_selected_scaled = scaler.transform(X_val_selected)
+
+# Training the logistic regression model on selected features
+model_selected = LogisticRegression()
+model_selected.fit(X_train_selected_scaled, y_train)
+
+# Predicting on the validation set
+y_pred_selected = model_selected.predict(X_val_selected_scaled)
+
+# Evaluating the accuracy of the model
+accuracy_selected = accuracy_score(y_val, y_pred_selected)
+print("Accuracy of Logistic Regression with selected features:", accuracy_selected)
+
+
+# Building the correlation matrix with correct feature names
+correlation_matrix.index = feature_names
+correlation_matrix.columns = feature_names
+
+# Plotting the correlation matrix as a heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.xlabel('Features')
+plt.ylabel('Features')
+plt.show()
+
+Завдання №2 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+model = LogisticRegression()
+# Завантаження даних з CSV-файлів
+run_accelerometer = pd.read_csv("run_accelerometer.csv")
+run_gyroscope = pd.read_csv("run_gyroscope.csv")
+jack_accelerometer = pd.read_csv("jack_accelerometer.csv")
+jack_gyroscope = pd.read_csv("jack_gyroscope.csv")
+jump_accelerometer = pd.read_csv("jump_accelerometer.csv")
+jump_gyroscope = pd.read_csv("jump_gyroscope.csv")
+
+# Додавання стовпців "activity" та об'єднання даних в один датасет
+run_accelerometer['activity'] = 'run'
+run_gyroscope['activity'] = 'run'
+jack_accelerometer['activity'] = 'jack'
+jack_gyroscope['activity'] = 'jack'
+jump_accelerometer['activity'] = 'jump'
+jump_gyroscope['activity'] = 'jump'
+
+# Об'єднання всіх даних в один датасет
+dataset = pd.concat([run_accelerometer, run_gyroscope, jack_accelerometer, jack_gyroscope, jump_accelerometer, jump_gyroscope], ignore_index=True)
+# Поділ датасету на тренувальну і валідаційну вибірки (70/30%)
+X = dataset.drop('activity', axis=1)
+y = dataset['activity']
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Нормалізація даних
+scaler = MinMaxScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+# Тренування моделі SVM (Support Vector Machine)
+svm_model = SVC(kernel='linear', decision_function_shape='ovo')
+svm_model.fit(X_train_scaled, y_train)
+
+# Прогнозування на валідаційній вибірці
+y_pred = svm_model.predict(X_val_scaled)
+
+# Оцінка точності
+accuracy = accuracy_score(y_val, y_pred)
+print("Accuracy of SVM Classifier:", accuracy)
+
+correlation_matrix = X_train.corr()
+# Вибір 5 ознак з найбільшою кореляцією між собою
+selected_features = correlation_matrix.nlargest(5, correlation_matrix.columns).index
+X_train_selected = X_train[selected_features]
+X_val_selected = X_val[selected_features]
+
+# Нормалізація вибраних ознак
+X_train_selected_scaled = scaler.fit_transform(X_train_selected)
+X_val_selected_scaled = scaler.transform(X_val_selected)
+
+# Тренування моделі SVM на вибраних ознаках
+svm_model_selected = SVC(kernel='linear', decision_function_shape='ovo') # One by one
+svm_model_selected.fit(X_train_selected_scaled, y_train)
+
+# Прогнозування на валідаційній вибірці з вибраними ознаками
+y_pred_selected = svm_model_selected.predict(X_val_selected_scaled)
+
+# Оцінка результату з вибраними ознаками
+accuracy_selected = accuracy_score(y_val, y_pred_selected)
+print("Accuracy of SVM Classifier with selected features:", accuracy_selected)
+
+# Building the correlation matrix
+
+# Plotting the correlation matrix as a heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.xlabel('Features')
+plt.ylabel('Features')
+plt.show()
